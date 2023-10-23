@@ -19,8 +19,8 @@ import com.anadolstudio.core.util.common_extention.makeGone
 import com.anadolstudio.core.util.common_extention.makeVisible
 
 object AnimateUtil {
-    const val DURATION_SHORT: Long = 100
-    const val DURATION_EXTRA_SHORT: Long = 200
+    const val DURATION_EXTRA_SHORT: Long = 100
+    const val DURATION_SHORT: Long = 200
     const val DURATION_NORMAL: Long = 300
     const val DURATION_LONG: Long = 400
     const val DURATION_EXTRA_LONG: Long = 800
@@ -32,13 +32,15 @@ object AnimateUtil {
 
     private const val SCALE_DEFAULT = 1.0F
 
+    private enum class Vector { HORIZONTAL, VERTICAL }
+
     fun showAnimX(view: View, start: Float, end: Float) {
         view.visibility = INVISIBLE
         view.translationX = start
         view.animate()
-                .translationX(end)
-                .setDuration(DURATION_NORMAL)
-                .setListener(getSimpleStartListener(view))
+            .translationX(end)
+            .setDuration(DURATION_NORMAL)
+            .setListener(getSimpleStartListener(view))
     }
 
     fun showAnimX(view: View, start: Float, end: Float, visible: Int) {
@@ -59,10 +61,10 @@ object AnimateUtil {
     }
 
     fun <T : View> fadOutAnimation(
-            view: T,
-            duration: Long = DURATION_EXTRA_SHORT,
-            visibility: Int = INVISIBLE,
-            completion: ((T) -> Unit)? = null
+        view: T,
+        duration: Long = DURATION_SHORT,
+        visibility: Int = INVISIBLE,
+        completion: ((T) -> Unit)? = null
     ) {
         with(view) {
             animate()
@@ -76,8 +78,8 @@ object AnimateUtil {
     }
 
     fun <T : View> fadInAnimation(
-            view: T,
-            duration: Long = DURATION_EXTRA_SHORT, completion: ((T) -> Unit)? = null
+        view: T,
+        duration: Long = DURATION_SHORT, completion: ((T) -> Unit)? = null
     ) {
         with(view) {
             alpha = 0f
@@ -106,41 +108,107 @@ object AnimateUtil {
 
         translationY = -height.toFloat()
         animate()
-                .translationY(0f)
-                .setDuration(duration)
-                .setInterpolator(DecelerateInterpolator())
-                .setListener(getSimpleStartListener(this))
+            .translationY(0f)
+            .setDuration(duration)
+            .setInterpolator(DecelerateInterpolator())
+            .setListener(getSimpleStartListener(this))
     }
+
+    fun View.showTranslationTopOutBottomIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInAnotherEge(START, Vector.VERTICAL, duration, onEndAction)
+
+    fun View.showTranslationBottomOutTopIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInAnotherEge(END, Vector.VERTICAL, duration, onEndAction)
 
     fun View.showTranslationStartOutEndIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
-            outEdgeInEge(END, duration, onEndAction)
+        outEdgeInAnotherEge(END, Vector.HORIZONTAL, duration, onEndAction)
 
     fun View.showTranslationEndOutStartIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
-            outEdgeInEge(START, duration, onEndAction)
+        outEdgeInAnotherEge(START, Vector.HORIZONTAL, duration, onEndAction)
 
-    private fun View.outEdgeInEge(direction: Int, duration: Long, onEndAction: (() -> Unit)?) {
-        animate()
-                .translationX(direction * width.toFloat())
-                .setDuration(duration)
-                .setInterpolator(DecelerateInterpolator())
-                .withEndAction {
-                    translationX = -1 * direction * width.toFloat()
-                    animate()
-                            .translationX(0F)
-                            .setDuration(duration)
-                            .setInterpolator(DecelerateInterpolator())
-                            .withEndAction { onEndAction?.invoke() }
-                            .start()
+    private fun View.outEdgeInAnotherEge(
+        direction: Int,
+        vector: Vector,
+        duration: Long,
+        onEndAction: (() -> Unit)?
+    ) {
+        animate().apply {
+            when (vector) {
+                Vector.HORIZONTAL -> this.translationX(direction * width.toFloat())
+                Vector.VERTICAL -> this.translationY(direction * height.toFloat())
+            }
+        }
+            .setDuration(duration)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                onEndAction?.invoke()
+                when (vector) {
+                    Vector.HORIZONTAL -> translationX = -1 * direction * width.toFloat()
+                    Vector.VERTICAL -> translationY = -1 * direction * height.toFloat()
                 }
-                .start()
+                animate()
+                    .apply {
+                        when (vector) {
+                            Vector.HORIZONTAL -> this.translationX(0F)
+                            Vector.VERTICAL -> this.translationY(0F)
+                        }
+                    }
+                    .setDuration(duration)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            .start()
     }
+
+    fun View.showTranslationTopOutTopIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInThisEge(START, Vector.VERTICAL, duration, onEndAction)
+
+    fun View.showTranslationBottomOutBottomIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInThisEge(END, Vector.VERTICAL, duration, onEndAction)
+
+    fun View.showTranslationStartOutStartIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInThisEge(END, Vector.HORIZONTAL, duration, onEndAction)
+
+    fun View.showTranslationEndOutEndIn(duration: Long = DURATION_NORMAL, onEndAction: (() -> Unit)? = null) =
+        outEdgeInThisEge(START, Vector.HORIZONTAL, duration, onEndAction)
+
+    private fun View.outEdgeInThisEge(
+        direction: Int,
+        vector: Vector,
+        duration: Long,
+        onEndAction: (() -> Unit)?
+    ) {
+        animate().apply {
+            when (vector) {
+                Vector.HORIZONTAL -> this.translationX(direction * width.toFloat())
+                Vector.VERTICAL -> this.translationY(direction * height.toFloat())
+            }
+        }
+            .setDuration(duration)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction {
+                onEndAction?.invoke()
+                animate()
+                    .apply {
+                        when (vector) {
+                            Vector.HORIZONTAL -> this.translationX(0F)
+                            Vector.VERTICAL -> this.translationY(0F)
+                        }
+                    }
+                    .setDuration(duration)
+                    .setInterpolator(DecelerateInterpolator())
+                    .start()
+            }
+            .start()
+    }
+
 
     fun ViewGroup.animSlideOut(@Slide.GravityFlag slideEdge: Int, duration: Long = DURATION_NORMAL) {
         if (!isVisible) return
 
         val slide = Slide(slideEdge)
-                .setDuration(duration)
-                .setInterpolator(DecelerateInterpolator())
+            .setDuration(duration)
+            .setInterpolator(DecelerateInterpolator())
         TransitionManager.beginDelayedTransition(this, slide)
         makeGone()
     }
@@ -245,7 +313,7 @@ object AnimateUtil {
     private fun View.scaleAnimation(scale: Float, action: (() -> Unit)? = null) = animate()
             .scaleX(scale)
             .scaleY(scale)
-            .setDuration(DURATION_EXTRA_SHORT)
+            .setDuration(DURATION_SHORT)
             .withStartAction { action?.invoke() }
             .setInterpolator(DecelerateInterpolator())
             .start()

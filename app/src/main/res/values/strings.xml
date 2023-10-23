@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">TicTacToe</string>
+    <string name="app_name">Tic Tac Toe</string>
+    <string name="classic">Классическая игра</string>
+    <string name="custom">Кастомная игра</string>
+    <string name="current_player_turn">Сейчас ходит:\n%s</string>
+    <string name="current_player_win">Победил(а)\n%s</string>
+    <string name="draw">Ничья</string>
+    <string name="restart">Начать заново</string>
 </resources>

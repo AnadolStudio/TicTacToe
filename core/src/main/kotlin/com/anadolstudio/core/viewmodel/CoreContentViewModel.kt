@@ -5,7 +5,7 @@ import com.anadolstudio.core.viewmodel.livedata.onNext
 import com.anadolstudio.core.viewmodel.livedata.toImmutable
 
 abstract class CoreContentViewModel<State : Any, NavigateData : Any>(
-        private val initState: State
+        protected val initState: State
 ) : CoreActionViewModel<NavigateData>() {
 
     protected val _stateLiveData = MutableLiveData(initState)

@@ -29,13 +29,12 @@ class GameViewModel(
 
         updateState {
             val winner = checkWinner(currentPlayer)
-            val hasEmptyPoint = allPlayers.flatMap { it.points }.size == state.type.size()
 
             copy(
                 currentPlayer = nextPlayer,
                 players = allPlayers,
                 winnerPlayer = winner,
-                isEnd = winner != null || hasEmptyPoint
+                isEnd = winner != null
             )
         }
     }
@@ -57,75 +56,20 @@ class GameViewModel(
     }
 
     private fun findWinnerPoints(currentPlayer: Player): Rect? {
-        for (gamePoint in currentPlayer.points) {
-
-            val winPoints = listOfNotNull(
-                checkSupportDiagonal(currentPlayer.points, gamePoint),
-                checkMainDiagonal(currentPlayer.points, gamePoint),
-                checkHorizontal(currentPlayer.points, gamePoint),
-                checkVertical(currentPlayer.points, gamePoint),
-            )
-
-            if (winPoints.isNotEmpty()) return winPoints.first()
-        }
-
         return null
     }
 
-    private fun checkVertical(pointList: List<GamePoint>, point: GamePoint): Rect? = getRectOrNull(
-        startPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row - iteration && currentPoint.column == point.column
-        },
-        endPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row + iteration && currentPoint.column == point.column
-        }
-    )
+    private fun checkRightDiagonal(points: List<GamePoint>, gamePoint: GamePoint): Rect? =
+        getRectOrNull(
+            startPoint = points.firstOrNull { it.row == gamePoint.row - 1 && it.column + 1 == gamePoint.column },
+            endPoint = points.firstOrNull { it.row == gamePoint.row + 1 && it.column - 1 == gamePoint.column }
+        )
 
-    private fun checkHorizontal(pointList: List<GamePoint>, point: GamePoint): Rect? = getRectOrNull(
-        startPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row && currentPoint.column - iteration == point.column
-        },
-        endPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row && currentPoint.column + iteration == point.column
-        }
-    )
-
-    private fun checkSupportDiagonal(pointList: List<GamePoint>, point: GamePoint): Rect? = getRectOrNull(
-        startPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row - iteration && currentPoint.column + iteration == point.column
-        },
-        endPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row + iteration && currentPoint.column - iteration == point.column
-        }
-    )
-
-    private fun checkMainDiagonal(pointList: List<GamePoint>, point: GamePoint): Rect? = getRectOrNull(
-        startPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row - iteration && currentPoint.column - iteration == point.column
-        },
-        endPoint = pointList.getLastPoint { iteration, currentPoint ->
-            currentPoint.row == point.row + iteration && currentPoint.column + iteration == point.column
-        }
-    )
-
-    private fun List<GamePoint>.getLastPoint(action: (iteration: Int, currentPoint: GamePoint) -> Boolean): GamePoint? {
-        var resultPoint: GamePoint? = null
-        var iteration = 1
-
-        do {
-            val currentPoint = firstOrNull { action.invoke(iteration, it) }
-
-            if (currentPoint == null) {
-                break
-            } else {
-                resultPoint = currentPoint
-                iteration++
-            }
-
-        } while (resultPoint != null)
-
-        return resultPoint
-    }
+    private fun checkLeftDiagonal(points: List<GamePoint>, gamePoint: GamePoint): Rect? =
+        getRectOrNull(
+            startPoint = points.firstOrNull { it.row == gamePoint.row - 1 && it.column - 1 == gamePoint.column },
+            endPoint = points.firstOrNull { it.row == gamePoint.row + 1 && it.column + 1 == gamePoint.column }
+        )
 
     private fun getRectOrNull(
         startPoint: GamePoint?,

@@ -1,6 +1,5 @@
 package com.touchin.tictactoe.feature.game
 
-import android.graphics.Color
 import androidx.annotation.DrawableRes
 
 data class Player(

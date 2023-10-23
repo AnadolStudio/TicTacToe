@@ -37,7 +37,7 @@
             android:layout_height="36dp"
             android:layout_gravity="center"
             tools:src="@drawable/ic_cross"
-            tools:tint="@color/colorAccent"/>
+            tools:tint="@color/colorAccent" />
 
     </LinearLayout>
 

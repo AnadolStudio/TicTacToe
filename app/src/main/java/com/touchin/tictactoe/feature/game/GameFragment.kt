@@ -6,10 +6,8 @@ import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import androidx.annotation.StringRes
-import androidx.core.view.isVisible
 import androidx.navigation.fragment.navArgs
 import com.anadolstudio.core.view.animation.AnimateUtil
-import com.anadolstudio.core.view.animation.AnimateUtil.scaleAnimationOnClick
 import com.anadolstudio.core.view.animation.AnimateUtil.showTranslationStartOutEndIn
 import com.anadolstudio.core.view.animation.AnimateUtil.showTranslationTopOutTopIn
 import com.anadolstudio.core.viewbinding.viewBinding
@@ -18,7 +16,6 @@ import com.anadolstudio.core.viewmodel.obtainViewModel
 import com.touchin.tictactoe.R
 import com.touchin.tictactoe.base.fragment.BaseContentFragment
 import com.touchin.tictactoe.databinding.FragmentGameBinding
-import com.touchin.tictactoe.util.confetti.ConfettiGenerator
 
 class GameFragment : BaseContentFragment<GameState, GameViewModel, GameController>(R.layout.fragment_game) {
 
@@ -35,7 +32,6 @@ class GameFragment : BaseContentFragment<GameState, GameViewModel, GameControlle
     override fun initView(controller: GameController) {
         binding.field.initGrid(args.type.gridSide)
         binding.field.setOnClickListener { row, column -> controller.onItemClicked(row, column) }
-        binding.restartButton.scaleAnimationOnClick { controller.restart() }
     }
 
     override fun handleEvent(event: SingleEvent) = when (event) {
@@ -45,7 +41,6 @@ class GameFragment : BaseContentFragment<GameState, GameViewModel, GameControlle
     }
 
     private fun showWinnerLine(event: GameEvents.Win) {
-        ConfettiGenerator(binding.root).launchConfetti()
         binding.field.showWinner(event.player.color, event.startColumn, event.startRow, event.endColumn, event.endRow)
     }
 
@@ -78,7 +73,6 @@ class GameFragment : BaseContentFragment<GameState, GameViewModel, GameControlle
         state.players.forEach { player -> field.setImages(player.shapeDrawableRes, player.color, player.points) }
 
         state.isEnd.render(RENDER_ENABLE_KEY) {
-            restartButton.isVisible = state.isEnd
             field.isEnabled = !state.isEnd
         }
     }

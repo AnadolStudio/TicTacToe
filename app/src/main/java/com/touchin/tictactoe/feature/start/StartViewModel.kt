@@ -13,7 +13,7 @@ import com.touchin.tictactoe.feature.game.GameType
 class StartViewModel : BaseActionViewModel(), StartController {
 
     override fun onDuoClicked() = navigateToGame(GameType.DUO)
-    override fun onTrioClicked() = navigateToGame(GameType.TRIO)
+    override fun onTrioClicked() = showTodo()
 
     private fun navigateToGame(gameType: GameType) {
         _navigationEvent.navigateTo(

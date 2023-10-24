@@ -1,4 +1,5 @@
 # TicTacToe
 
-https://github.com/AnadolStudio/TicTacToe/assets/74777850/c415fbf0-d193-4556-99a2-1e8172ead786
+### Демо
+https://github.com/AnadolStudio/TicTacToe/assets/74777850/70ae7879-8943-4b9f-b5bc-2277bf15813d
 

@@ -1,18 +1,23 @@
 package com.touchin.tictactoe.view
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
+import android.graphics.Path
+import android.graphics.PathMeasure
 import android.util.AttributeSet
 import android.view.ViewGroup.LayoutParams
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.view.animation.DecelerateInterpolator
 import android.widget.GridLayout
 import android.widget.ImageView
 import com.anadolstudio.core.util.common.dpToPx
 import com.anadolstudio.core.util.common_extention.getCompatDrawable
+import com.anadolstudio.core.view.animation.AnimateUtil.DURATION_EXTRA_LONG
+import com.anadolstudio.core.view.animation.AnimateUtil.DURATION_LONG
 import com.anadolstudio.core.view.animation.AnimateUtil.DURATION_NORMAL
 import com.touchin.tictactoe.R
 import com.touchin.tictactoe.feature.game.GamePoint
@@ -32,7 +37,8 @@ class TicTakToeField @JvmOverloads constructor(
     private var side: Int = DEFAULT_SIDE
     private var clickListener: ((row: Int, column: Int) -> Unit)? = null
     private val buttonList = mutableListOf<ImageView>()
-    private var winnerPoints: Rect? = null
+    private var path: Path? = null
+    private var animator: ValueAnimator? = null
 
     private val gridPaint = Paint().apply {
         color = context.getColor(R.color.colorAccent)
@@ -90,15 +96,9 @@ class TicTakToeField @JvmOverloads constructor(
 
     override fun onDrawForeground(canvas: Canvas?) {
         super.onDrawForeground(canvas)
-        val winnerPoints = winnerPoints
-        if (canvas != null && winnerPoints != null)
-            drawWinLine(
-                canvas = canvas,
-                startColumn = winnerPoints.left,
-                startRow = winnerPoints.top,
-                endColumn = winnerPoints.right,
-                endRow = winnerPoints.bottom,
-            )
+        val path = path
+        if (canvas != null && path != null)
+            drawWinLine(canvas = canvas, path = path)
     }
 
     private fun drawGrid(canvas: Canvas) {
@@ -115,25 +115,19 @@ class TicTakToeField @JvmOverloads constructor(
 
     private fun drawWinLine(
         canvas: Canvas,
-        startColumn: Int,
-        startRow: Int,
-        endColumn: Int,
-        endRow: Int,
+        path: Path,
     ) {
-        val imageSide = getImageSide()
 
-        val startX = (startColumn + 1) * imageSide - (imageSide) / 2
-        val startY = (startRow + 1) * imageSide - (imageSide) / 2
-        val endX = (endColumn + 1) * imageSide - (imageSide) / 2
-        val endY = (endRow + 1) * imageSide - (imageSide) / 2
-
-        canvas.drawLine(startX, startY, endX, endY, winLineBackGroundPaint)
-        canvas.drawLine(startX, startY, endX, endY, winLinePaint)
+        val pathMeasure = PathMeasure(path, false)
+        pathMeasure.length
+        canvas.drawPath(path, winLineBackGroundPaint)
+        canvas.drawPath(path, winLinePaint)
     }
 
     private fun getImageSide(): Float = (width / side).toFloat()
 
     fun initGrid(side: Int) {
+        isEnabled = true
         this.side = side
         columnCount = side
         rowCount = side
@@ -160,13 +154,14 @@ class TicTakToeField @JvmOverloads constructor(
     }
 
     fun restart() {
-        isEnabled = true
-        winnerPoints = null
-        buttonList.forEach {
-            it.animate()
+        animator?.cancel()
+        path = null
+        buttonList.forEachIndexed { index, imageView ->
+            imageView.animate()
                 .scaleX(0F)
                 .scaleY(0F)
-                .setDuration(DURATION_NORMAL)
+                .setStartDelay(DURATION_NORMAL * index / (side * side))
+                .setDuration(DURATION_LONG)
                 .withEndAction { initGrid(side) }
                 .start()
         }
@@ -176,12 +171,45 @@ class TicTakToeField @JvmOverloads constructor(
         super.setEnabled(enabled)
 
         buttonList.forEach { it.isEnabled = isEnabled }
-        alpha = if (enabled) 1F else 0.3F
+        val alpha = if (enabled) 1F else 0.3F
+
+        this.animate()
+            .alpha(alpha)
+            .setDuration(DURATION_NORMAL)
+            .start()
     }
 
     fun showWinner(color: Int, startColumn: Int, startRow: Int, endColumn: Int, endRow: Int) {
         winLinePaint.color = color
         isEnabled = false
-        winnerPoints = Rect(startColumn, startRow, endColumn, endRow)
+        showAnimationWinnerLine(startColumn, startRow, endColumn, endRow)
+    }
+
+    private fun showAnimationWinnerLine(startColumn: Int, startRow: Int, endColumn: Int, endRow: Int) {
+        val imageSide = getImageSide()
+
+        val startX = (startColumn + 1) * imageSide - (imageSide) / 2
+        val startY = (startRow + 1) * imageSide - (imageSide) / 2
+        val endX = (endColumn + 1) * imageSide - (imageSide) / 2
+        val endY = (endRow + 1) * imageSide - (imageSide) / 2
+
+        val resultPath = Path().apply {
+            moveTo(startX, startY)
+            lineTo(endX, endY)
+        }
+
+        animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = DURATION_EXTRA_LONG
+            interpolator = DecelerateInterpolator()
+            addUpdateListener { valueAnimator ->
+                val measure = PathMeasure(resultPath, false)
+                val newPath = Path()
+                measure.getSegment(0F, measure.length * valueAnimator.animatedFraction, newPath, true)
+                path = newPath
+
+                invalidate()
+            }
+            start()
+        }
     }
 }

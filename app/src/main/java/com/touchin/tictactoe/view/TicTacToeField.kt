@@ -22,7 +22,7 @@ import com.anadolstudio.core.view.animation.AnimateUtil.DURATION_NORMAL
 import com.touchin.tictactoe.R
 import com.touchin.tictactoe.feature.game.GamePoint
 
-class TicTakToeField @JvmOverloads constructor(
+class TicTacToeField @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
@@ -74,7 +74,7 @@ class TicTakToeField @JvmOverloads constructor(
                 setBackgroundResource(R.drawable.item_ripple_rectangle)
 
                 setOnClickListener {
-                    if (this@TicTakToeField.isEnabled) {
+                    if (this@TicTacToeField.isEnabled) {
                         clickListener?.invoke(row, column)
                     }
                 }
